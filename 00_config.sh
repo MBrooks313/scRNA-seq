@@ -1,10 +1,11 @@
 #!/bin/sh
 
-# Activate conda environment with kallisto-bustools
-source /data/$USER/conda/etc/profile.d/conda.sh
-conda activate scRNA
+# Activate conda environment with kallisto-bustools installed
+source <path_to_conda.sh_profile>
+conda activate <conda_env>
 
-wd='/data/brooksma/scRNA-seq/06_200310'
+# Working directory
+wd=<absolute_path_to_working_directory>
 
 # Index and transcript to gene file location
-idx_dir='/data/brooksma/Index/Mouse/scRNA/scEiaD'
+idx_dir=<absolute_path_to_index_directory>
