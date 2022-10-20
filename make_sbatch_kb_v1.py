@@ -3,14 +3,14 @@
 """
 Created on Tue Jun  7 22:52:04 2022
 
-@author: brooksma
+@author: MJBrooks
 """
 
 import glob
 import pandas as pd
 from os import path
 
-work_dir = "/Volumes/data-1/scRNA-seq/06_200310"
+work_dir = <absolute_path_to_working_directory>
 
 ##----------##
 # Get a dataframe of sample directories and their fastq files
