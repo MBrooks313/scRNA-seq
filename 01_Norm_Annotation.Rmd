@@ -1,0 +1,165 @@
+---
+title: "01c_Norm_Annotation"
+output: html_notebook
+author: "Matthew J. Brooks"
+date_created: "October 28th, 2022"
+---
+
+
+This analysis merges the 06_200310 Seurat list object, performs decontX, then normalization, and assigns cell type annotation.
+
+### Import Seurat list objects 
+```{r, message=FALSE}
+library(Seurat)
+
+proj_nm <- "06_200310"
+
+# Get Seurat list object from 00_Data_import
+seu_list <- readRDS("../data/interim/seu_list_dub.06-200310.rds")
+
+```
+
+### Create directories
+```{r}
+
+expt_nm <- "06_200310_dX_df_dX"
+dir_export <- file.path("../data/processed", expt_nm, "01_Norm_Annotation")
+
+dir.create(dir_export, recursive = T)
+
+```
+
+### Merge Seurat list into one Seurat object
+```{r, message=FALSE}
+
+################
+# Merge data
+seu <- merge(x = seu_list[[1]], seu_list[2:8], 
+                       add.cell.ids = names(seu_list), 
+                       project = proj_nm)
+
+
+################
+## Get rid of DoubletFinder doublets
+dubfind <- rowSums(sapply(seu@meta.data, function(x){x == "Doublet"}), na.rm = T) == 0
+seu <- seu[,dubfind]
+
+```
+
+
+### Add meta features to Seurat object
+```{r}
+
+# Add age and tissue to meta.data
+age <- gsub("(.+)_.+", "\\1", seu@meta.data$orig.ident)
+tissue <- gsub(".+_(.+)", "\\1", seu@meta.data$orig.ident)
+
+seu <- AddMetaData(seu, age, col.name = "age")
+seu <- AddMetaData(seu, tissue, col.name = "tissue")
+
+# Adjust factors
+seu@meta.data$orig.ident <- factor(seu@meta.data$orig.ident, 
+                                             levels = unique(seu@meta.data$orig.ident))
+
+seu@meta.data$age <- factor(seu@meta.data$age, 
+                                      levels = unique(seu@meta.data$age))
+
+seu@meta.data$tissue <- factor(seu@meta.data$tissue, 
+                                         levels = unique(seu@meta.data$tissue))
+
+```
+
+
+### Run decontX on merged data
+```{r}
+source("../src/data/decontX.R")
+
+seu <- decX(seu)
+
+```
+
+### Normalize and cluster the Seurat object
+```{r, message=FALSE}
+
+library(sctransform)
+library(kableExtra)
+
+seu <- SCTransform(seu, assay = "decontXcounts") %>% 
+    RunPCA() %>%
+  FindNeighbors(dims = 1:30) %>% 
+  RunUMAP(dims = 1:30) %>% 
+  FindClusters()
+
+```
+
+
+
+### Add annotation
+```{r, message=FALSE}
+library(tidyverse)
+source("../src/data/sctype_ann_v2.R")
+
+##################
+## Sanes cell-type
+gs_sanes_file <- "/Volumes/Accelsior_8M2/scRNAseq/scRNA_aging/221001/data/external/Cell_type_MB.xlsx"
+
+raw_gs_sanes <- readxl::read_excel(gs_sanes_file)
+
+gs_sanes_sub <- list()
+for (i in unique(raw_gs_sanes$sub_cell_type)){
+  tmp <- raw_gs_sanes %>% 
+    dplyr::filter(sub_cell_type == i) %>% 
+    dplyr::select(gene) %>% 
+    as.vector() %>% 
+    unlist(use.names = F) %>% 
+    toupper()
+  gs_sanes_sub[[i]] <- tmp
+}
+
+sctypes = c("Astrocytes", "Immune cells", "Retinal pigment epithelial cells")
+
+
+################
+# Perform cell type annotation at sub cell type level
+seu <- sctype_ann(seu, gs_pos = gs_sanes_sub, 
+                       sctypes = c("Astrocytes", "Immune cells", "Retinal pigment epithelial cells"))
+
+# Add sub cell type annotation to metadata
+seu <- AddMetaData(seu, metadata = seu$CellType, col.name = "SubCellType")
+
+
+################
+# Recode the sub cell type to cell type and add to meta
+
+# Get subcell to cell type named vector for recoding
+celltype_ls <- raw_gs_sanes$cell_type
+names(celltype_ls) <- raw_gs_sanes$sub_cell_type
+celltype_ls <- celltype_ls[unique(names(celltype_ls))]
+celltype_ls <- celltype_ls[grep("one", celltype_ls)]
+
+# recode the subcell types as cell types
+sub_cell <- seu$SubCellType
+args_sub <- c(list(sub_cell), celltype_ls)
+sub_cell_replace <- do.call(recode, args_sub)
+
+# Add cell type annotation to meta data
+seu <- AddMetaData(seu, metadata = sub_cell_replace, col.name = "CellType")
+
+
+################
+# Make plots
+a <- DimPlot(seu, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'SubCellType')
+cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_SubCellTypeAnn_merged.png")), width = 16, height = 12)
+
+a <- DimPlot(seu, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'CellType')
+cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_CellTypeAnn_merged.png")), width = 16, height = 12)
+
+```
+
+
+### Export Seurat object
+```{r}
+
+saveRDS(object = seu, file = "../data/interim/seu_merged_221028.rds")
+
+```

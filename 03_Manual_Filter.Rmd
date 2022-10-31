@@ -1,0 +1,526 @@
+---
+title: "03_Manual_Filter"
+output: html_notebook
+author: "Matthew J. Brooks"
+date_created: "October 28th, 2022"
+---
+
+
+This analysis filters the 06_200310 Seurat object of doublet cells using manual technique and gets rid of low-feature rods to generate the final filtered dataset.
+
+### Import Seurat list objects 
+```{r, message=FALSE}
+library(Seurat)
+
+# Get run info data
+seu <- readRDS("../data/interim/seu_merged_221028.rds") # This is used from the output of 01_Norm_Annotation
+# seu.filt <- readRDS("../data/interim/seu_filt.06_200310_221021.rds") # This is used to continue the analysis after the manual filter step
+
+```
+
+
+### Create directories
+```{r}
+
+expt_nm <- "06_200310_dX_df_dX"
+dir_export <- file.path("../data/processed", expt_nm, "03_Manual_Filter")
+
+dir.create(dir_export, recursive = T)
+
+```
+
+<!-- ### Re-call the cell type annotation using Sanes/NNRL markers -->
+<!-- ```{r} -->
+<!-- library(tidyverse) -->
+<!-- source("../src/data/sctype_ann_v2.R") -->
+
+<!-- ## Sanes cell-type -->
+<!-- gs_sanes_file <- "/Volumes/Accelsior_8M2/scRNAseq/scRNA_aging/221001/data/external/Cell_type_MB.xlsx" -->
+
+<!-- raw_gs_sanes <- readxl::read_excel(gs_sanes_file) -->
+
+<!-- gs_sanes_sub <- list() -->
+<!-- for (i in unique(raw_gs_sanes$sub_cell_type)){ -->
+<!--   tmp <- raw_gs_sanes %>%  -->
+<!--     dplyr::filter(sub_cell_type == i) %>%  -->
+<!--     dplyr::select(gene) %>%  -->
+<!--     as.vector() %>%  -->
+<!--     unlist(use.names = F) %>%  -->
+<!--     toupper() -->
+<!--   gs_sanes_sub[[i]] <- tmp -->
+<!-- } -->
+
+<!-- sctypes = c("Astrocytes", "Immune cells", "Retinal pigment epithelial cells") -->
+
+
+<!-- seu.06_200310 <- sctype_ann(seu.06_200310, gs_pos = gs_sanes_sub,  -->
+<!--                        sctypes = c("Astrocytes", "Immune cells", "Retinal pigment epithelial cells")) -->
+
+<!-- # Add sub cell type annotation to metadata -->
+<!-- seu.06_200310 <- AddMetaData(seu.06_200310, metadata = seu.06_200310$CellType, col.name = "SubCellType") -->
+
+<!-- # Get subcell to cell type named vector for recoding -->
+<!-- celltype_ls <- raw_gs_sanes$cell_type -->
+<!-- names(celltype_ls) <- raw_gs_sanes$sub_cell_type -->
+<!-- celltype_ls <- celltype_ls[unique(names(celltype_ls))] -->
+<!-- celltype_ls <- celltype_ls[grep("one", celltype_ls)] -->
+
+<!-- # recode the subcell types as cell types -->
+<!-- sub_cell <- seu.06_200310$SubCellType -->
+<!-- args_sub <- c(list(sub_cell), celltype_ls) -->
+<!-- sub_cell_replace <- do.call(recode, args_sub) -->
+
+<!-- # Add cell type annotation to meta data -->
+<!-- seu.06_200310 <- AddMetaData(seu.06_200310, metadata = sub_cell_replace, col.name = "CellType") -->
+
+<!-- # Make plots -->
+<!-- a <- DimPlot(seu.06_200310, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'SubCellType') -->
+<!-- cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_SubCellTypeAnn.png")), width = 16, height = 12) -->
+
+<!-- a <- DimPlot(seu.06_200310, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'CellType') -->
+<!-- cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_CellTypeAnn.png")), width = 16, height = 12) -->
+
+
+
+
+<!-- ``` -->
+
+
+## Get gene markers for seu res=0.8
+```{r}
+seu.celltype <- seu
+
+# Change Idents to vell type
+Idents(seu.celltype) <- seu.celltype$CellType
+
+# Find cell type markers
+seu.cellmarkers <- FindAllMarkers(seu.celltype, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+write.table(seu.cellmarkers, file = file.path(dir_export, paste0(expt_nm, "_celltype_markers_res08.tsv")), quote = F, row.names = F, sep = "\t")
+
+# seu.cellmarkers %>%
+#     group_by(cluster) %>%
+#     top_n(n = 10, wt = avg_log2FC) -> top10
+# 
+# t10 <- DoHeatmap(seu, features = top10$gene) + NoLegend()
+# cowplot::ggsave2(plot = t10, file = "../data/processed/06_200310_celltype_Top10_res08.png", width = 24, height = 32)
+
+
+```
+
+
+## Increase cluster resolution and find marker genes for 
+```{r}
+seu.tmp <- seu
+
+# Res 6
+seu.tmp <- FindClusters(seu.tmp, resolution = 6)
+u <- DimPlot(seu.tmp, reduction = "umap", label = T, pt.size = 0.1) + NoLegend()
+cowplot::ggsave2(plot = u, file = file.path(dir_export, paste0(expt_nm, "_Dim_cluster_res6.png")), width = 12, height = 12)
+
+seu.markers.tmp <- FindAllMarkers(seu.tmp, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+write.table(seu.markers.tmp, file = file.path(dir_export, paste0(expt_nm, "_cluster_markers_res6.tsv")),
+            quote = F, row.names = F, sep = "\t")
+
+# seu.markers.tmp %>%
+#     group_by(cluster) %>%
+#     top_n(n = 10, wt = avg_log2FC) -> top10
+# 
+# t10 <- DoHeatmap(seu.tmp, features = top10$gene) + NoLegend()
+# cowplot::ggsave2(plot = t10, file = "../data/processed/06_200310_BusDub_Top10_res6.png", width = 24, height = 32)
+```
+
+
+## Investigate top 3 cell type marker genes on clusters
+```{r}
+library(tidyverse)
+
+df.tmp <- seu.tmp@meta.data %>% group_by(seurat_clusters) %>% dplyr::select(CellType) %>% table() %>% as.tibble() %>% dplyr::filter(n > 1) %>% dplyr::rename(cells=n) %>% group_by(seurat_clusters) %>% arrange(desc(cells)) %>% slice_head(n=1) %>% arrange(CellType)
+
+
+
+seu.tmp$seurat_clusters <- factor(x = seu.tmp$seurat_clusters, levels = rev(df.tmp$seurat_clusters))
+# seu.tmp@meta.data$seurat_clusters <- factor(x = seu.tmp@meta.data$seurat_clusters, levels = df.tmp$seurat_clusters)
+Idents(seu.tmp) <- seu.tmp$seurat_clusters
+
+# df.tmp <- seu.tmp@meta.data %>% group_by(seurat_clusters) %>% dplyr::select(CellType) %>% table() %>% as.tibble() %>% dplyr::filter(n > 1) %>% group_by(seurat_clusters) %>% slice_max(desc(n)) %>% arrange(CellType)
+# 
+# seu.tmp$seurat_clusters <- factor(x = seu.tmp$seurat_clusters, levels = rev(df.tmp$seurat_clusters))
+# # seu.tmp@meta.data$seurat_clusters <- factor(x = seu.tmp@meta.data$seurat_clusters, levels = df.tmp$seurat_clusters)
+# Idents(seu.tmp) <- seu.tmp$seurat_clusters
+
+# goi <- c("Rho", "Gnat1", "Pde6b", "Sag",
+#          "Opn1sw", "Opn1mw", "Gnat2", "Pde6c", "Arr3",
+#          "Apoe", "Glul", "Rlbp1", "Clu")
+cellmark_mod <- seu.cellmarkers
+cellmark_mod$cluster <- factor(cellmark_mod$cluster, levels = sort(levels(seu.cellmarkers$cluster)))
+
+cellmark_filt <- cellmark_mod %>% 
+  dplyr::filter(pct.2 < 0.25) %>%
+  arrange(cluster) %>% 
+  group_by(cluster) %>% 
+  slice_max(order_by = avg_log2FC, n=3)
+  
+col.side <- scales::hue_pal()(length(unique(seu.tmp$CellType)))
+names(col.side) <- sort(unique(seu.tmp$CellType))
+col.clst <- col.side[df.tmp$CellType]
+clst.cumsum <- names(col.clst) %>% table() %>% as.vector() %>% rev() %>% cumsum()
+
+goi <- cellmark_filt$gene
+names(goi) <- rep(col.side, each = 3)[1:length(goi)]
+
+  
+q <- VlnPlot(seu.tmp, goi, stack = T) + NoLegend()
+
+q <- q + 
+  scale_y_discrete(labels = paste(rev(names(col.clst)), levels(Idents(seu.tmp)), sep = "_")) +
+  theme(axis.text.y = element_text(colour = rev(col.clst)),
+        axis.text.x = element_text(colour = names(goi)),
+               plot.background = element_rect(fill = "white"),
+               panel.background = element_rect(fill = "white")) +
+  geom_hline(yintercept = c(clst.cumsum + 0.5), 
+             linetype = "dashed", color = "darkgrey") 
+
+cowplot::ggsave2(plot = q, filename = file.path(dir_export, paste0(expt_nm, "_Viol_Top3filtCellMarker_res6.png")), height = 24, width = 48)
+```
+
+
+## Filter out the unwanted clusters with multiple canonical markers and features < 600
+```{r}
+# source("../src/data/sctype_ann.R")
+
+# Remove clusters with multiple canonical markers or unknown cell type
+seu.filt <- subset(seu.tmp, idents = c(78, 58, 81, 61, 101), invert = T)
+
+# Remove cells with less than 600 Features/cell
+feat_lt_600 <- seu.filt$nFeature_RNA < 600
+seu.filt <- AddMetaData(seu.filt, metadata = feat_lt_600, "feat_lt_600")
+
+# seu.final <- subset(seu.filt, subset = "feat_lt_600", invert = T)
+seu.final <- seu.filt[,!(seu.filt@meta.data$feat_lt_600)]
+
+```
+
+
+### Renormalize
+```{r}
+source("../src/data/opt_PC.R")
+
+pc <- opt_PC(seu.final)
+
+# Re-normalize and UMAP
+seu.final <- SCTransform(seu.final, assay = "decontXcounts") %>% 
+  RunPCA() %>% 
+  FindNeighbors(dims = 1:20) %>%
+  RunUMAP(dims = 1:20) %>% 
+  FindClusters()
+
+```
+
+
+### Re-annotate cell type
+```{r}
+
+source("../src/data/sctype_ann_v2.R")
+
+## Sanes cell-type
+gs_sanes_file <- "/Volumes/Accelsior_8M2/scRNAseq/scRNA_aging/221001/data/external/Cell_type_MB.xlsx"
+
+raw_gs_sanes <- readxl::read_excel(gs_sanes_file)
+
+gs_sanes_sub <- list()
+for (i in unique(raw_gs_sanes$sub_cell_type)){
+  tmp <- raw_gs_sanes %>% 
+    dplyr::filter(sub_cell_type == i) %>% 
+    dplyr::select(gene) %>% 
+    as.vector() %>% 
+    unlist(use.names = F) %>% 
+    toupper()
+  gs_sanes_sub[[i]] <- tmp
+}
+
+sctypes = c("Astrocytes", "Immune cells", "Retinal pigment epithelial cells")
+
+
+seu.final<- sctype_ann(seu.final, gs_pos = gs_sanes_sub, 
+                       sctypes = c("Astrocytes", "Immune cells", "Retinal pigment epithelial cells"))
+
+# Add sub cell type annotation to metadata
+seu.final <- AddMetaData(seu.final, metadata = seu.final$CellType, col.name = "SubCellType")
+
+# Get subcell to cell type named vector for recoding
+celltype_ls <- raw_gs_sanes$cell_type
+names(celltype_ls) <- raw_gs_sanes$sub_cell_type
+celltype_ls <- celltype_ls[unique(names(celltype_ls))]
+celltype_ls <- celltype_ls[grep("one", celltype_ls)]
+
+# recode the subcell types as cell types
+sub_cell <- seu.final$SubCellType
+args_sub <- c(list(sub_cell), celltype_ls)
+sub_cell_replace <- do.call(recode, args_sub)
+
+# Add cell type annotation to meta data
+seu.final <- AddMetaData(seu.final, metadata = sub_cell_replace, col.name = "CellType")
+
+```
+
+
+### Make final plots
+```{r}
+
+# Change idents to cell type
+# Idents(seu.final) <- seu.filt$CellType
+
+# Make the UMAP plots
+u <- DimPlot(seu.final, reduction = "umap", label = T, pt.size = 0.1) + NoLegend() + ggtitle("Filtered")
+cowplot::ggsave2(plot = u, file = file.path(dir_export, paste0(expt_nm, "_Dim_final.png")), width = 12, height = 12)
+
+a <- DimPlot(seu.final, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'CellType')
+cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_CellTypeAnn_final.png")), width = 16, height = 12)
+
+b <- DimPlot(seu.final, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'SubCellType')
+cowplot::ggsave2(plot = b, filename = file.path(dir_export, paste0(expt_nm, "_Dim_SubCellTypeAnn_final.png")), width = 16, height = 12)
+```
+
+
+## VAriable genes for Soumitra Oct 26th, 2022
+```{r}
+
+var_gene <- row.names(seu.final@assays$SCT@scale.data)
+
+write.csv(var_gene, file = paste0(dir_export, "/06-200310_final_SCT_varGenes.csv"))
+
+```
+
+
+<!-- ## Test plot -->
+<!-- ```{r} -->
+
+<!-- a <- DimPlot(seu.filt, reduction = "umap", split.by = "age", group.by = "tissue") -->
+
+<!-- cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_indi_age_filt.png")), width = 48, height = 12) -->
+<!-- ``` -->
+
+
+
+## Get gene markers for seu res=0.8
+```{r}
+
+# Change Idents to cell type
+Idents(seu.filt) <- seu.filt$seurat_clusters
+
+# Find cell type markers
+seu.clustermarkers <- FindAllMarkers(seu.filt, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+write.table(seu.clustermarkers, file = file.path(dir_export, paste0(expt_nm, "_cluster_markers_filt_res08.tsv")), quote = F, row.names = F, sep = "\t")
+
+# seu.cellmarkers %>%
+#     group_by(cluster) %>%
+#     top_n(n = 10, wt = avg_log2FC) -> top10
+# 
+# t10 <- DoHeatmap(seu, features = top10$gene) + NoLegend()
+# cowplot::ggsave2(plot = t10, file = "../data/processed/06_200310_celltype_Top10_res08.png", width = 24, height = 32)
+
+Idents(seu.filt) <- seu.filt$CellType
+```
+
+
+<!-- ## Show Features less than 600, filter and re-cluster  -->
+<!-- ```{r} -->
+<!-- library(tidyverse) -->
+<!-- feat_lt_600 <- seu.filt$nFeature_RNA < 600 -->
+<!-- seu.filt <- AddMetaData(seu.filt, metadata = feat_lt_600, "feat_lt_600") -->
+
+<!-- # seu.final <- subset(seu.filt, subset = "feat_lt_600", invert = T) -->
+<!-- seu.final <- seu.filt[,!(seu.filt@meta.data$feat_lt_600)] -->
+
+<!-- seu.final <- SCTransform(seu.final, assay = "decontXcounts") %>%  -->
+<!--   RunPCA() %>%  -->
+<!--   FindNeighbors(dims = 1:20) %>% -->
+<!--   RunUMAP(dims = 1:20) %>%  -->
+<!--   FindClusters() -->
+
+<!-- # # Re-annotate -->
+<!-- # seu.final <- sctype_ann(seu.final, gs_pos = gs_sanes_sub,  -->
+<!-- #                        sctypes = c("Astrocytes", "Immune cells", "Retinal pigment epithelial cells")) -->
+
+<!-- # # Add sub cell type annotation to metadata -->
+<!-- # seu.final <- AddMetaData(seu.final, metadata = seu.final$CellType, col.name = "SubCellType") -->
+<!-- #  -->
+<!-- # # Get subcell to cell type named vector for recoding -->
+<!-- # celltype_ls <- raw_gs_sanes$cell_type -->
+<!-- # names(celltype_ls) <- raw_gs_sanes$sub_cell_type -->
+<!-- # celltype_ls <- celltype_ls[unique(names(celltype_ls))] -->
+<!-- # celltype_ls <- celltype_ls[grep("one", celltype_ls)] -->
+<!-- #  -->
+<!-- # # recode the subcell types as cell types -->
+<!-- # sub_cell <- seu.final$SubCellType -->
+<!-- # args_sub <- c(list(sub_cell), celltype_ls) -->
+<!-- # sub_cell_replace <- do.call(recode, args_sub) -->
+<!-- #  -->
+<!-- # # Add cell type annotation to meta data -->
+<!-- # seu.final <- AddMetaData(seu.final, metadata = sub_cell_replace, col.name = "CellType") -->
+
+
+<!-- # Plots -->
+<!-- a <- FeaturePlot(seu.filt, features = "feat_lt_600") -->
+<!-- cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Feat_filt_lt600.png")), width = 16, height = 12) -->
+
+<!-- a <- DimPlot(seu.final, reduction = "umap", label = TRUE, repel = TRUE) -->
+<!-- cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_clusters_final.png")), width = 16, height = 12) -->
+
+<!-- a <- DimPlot(seu.final, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'CellType') -->
+<!-- cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_CellTypeAnn_final.png")), width = 16, height = 12) -->
+
+<!-- a <- DimPlot(seu.final, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'SubCellType') -->
+<!-- cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_SubCellTypeAnn_final.png")), width = 16, height = 12) -->
+
+
+<!-- ``` -->
+
+
+## Cell Marker plots
+```{r}
+
+dir_export2 <- file.path("../data/processed", expt_nm, "03_Manual_Filter", "CellAnnGOIplots")
+
+dir.create(dir_export2)
+
+
+for (i in 1:dim(raw_gs_sanes)[1]){
+
+  tmp_goi <- raw_gs_sanes$gene[i]
+  tmp_outname <- paste(gsub(" ", "", raw_gs_sanes$sub_cell_type[i]), tmp_goi, sep = "_")
+  
+  if (tmp_goi %in% row.names(seu.final@assays$RNA@counts)){
+    x <- FeaturePlot(seu.final, features = tmp_goi) + ggtitle(tmp_goi)
+  cowplot::ggsave2(plot = x, filename = file.path(dir_export2, paste0(expt_nm, "_Feat_", tmp_outname, ".png")), width = 16, height = 12)
+  }
+  
+}
+
+```
+
+## Determine optimal PCs for PCA analysis
+https://hbctraining.github.io/scRNA-seq/lessons/elbow_plot_metric.html
+
+```{r}
+# Plot the elbow plot
+ElbowPlot(object = seu.final, 
+          ndims = 50)
+
+# Determine percent of variation associated with each PC
+pct <- seu.final[["pca"]]@stdev / sum(seu.final[["pca"]]@stdev) * 100
+
+# Calculate cumulative percents for each PC
+cumu <- cumsum(pct)
+
+# Determine which PC exhibits cumulative percent greater than 90% and % variation associated with the PC as less than 5
+co1 <- which(cumu > 90 & pct < 5)[1]
+
+co1
+
+# Determine the difference between variation of PC and subsequent PC
+co2 <- sort(which((pct[1:length(pct) - 1] - pct[2:length(pct)]) > 0.1), decreasing = T)[1] + 1
+
+# last point where change of % of variation is more than 0.1%.
+co2
+
+# Minimum of the two calculation
+pcs <- min(co1, co2)
+
+pcs
+
+# Create a dataframe with values
+plot_df <- data.frame(pct = pct, 
+           cumu = cumu, 
+           rank = 1:length(pct))
+
+# Elbow plot to visualize 
+  ggplot(plot_df, aes(cumu, pct, label = rank, color = rank > pcs)) + 
+  geom_text() + 
+  geom_vline(xintercept = 90, color = "grey") + 
+  geom_hline(yintercept = min(pct[pct > 5]), color = "grey") +
+  theme_bw()
+
+
+
+```
+
+
+
+<!-- ```{r} -->
+<!-- seu <- seu.filt -->
+
+<!-- testnm <- "pca15" -->
+
+<!-- seu <- RunPCA(seu) %>%  -->
+<!--   FindNeighbors(dims = 1:15) %>% -->
+<!--   RunUMAP(dims = 1:15) %>%  -->
+<!--   FindClusters() -->
+
+
+<!-- a <- DimPlot(seu, reduction = "umap", label = TRUE, repel = TRUE) -->
+<!-- cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_clusters_final_", testnm, ".png")), width = 16, height = 12) -->
+
+<!-- a <- DimPlot(seu, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'CellType') -->
+<!-- cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_CellTypeAnn_final_", testnm, ".png")), width = 16, height = 12) -->
+
+<!-- a <- DimPlot(seu, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'SubCellType') -->
+<!-- cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_SubCellTypeAnn_final_", testnm, ".png")), width = 16, height = 12) -->
+
+
+
+
+<!-- ``` -->
+
+## Make barplot for numbers of cells filtered out
+```{r}
+
+cell_filt_og <- read.csv("../data/processed/06-200310_Cell_filt_count.tsv", sep = "\t")
+colnames(cell_filt_og) <- c("State", "Cells", "Source")
+cell_filt <- cell_filt_og %>% dplyr::filter(!(State %in% c("orig_cells", "filt_cells")))
+cell_interim <- cell_filt_og %>% dplyr::filter(State == "filt_cells")                         
+
+cell_final <- table(seu.filt$orig.ident) %>% as.data.frame() %>% mutate(State = "final_cells")
+cell_final <- cell_final[c(3,2,1)]
+colnames(cell_final) <- c("State", "Cells", "Source")
+
+cell_manual <- data.frame(State = "manual_filt",
+                          Cells = cell_interim$Cells - cell_final$Cells,
+                          Source = cell_final$Source)
+
+cell_counts <- rbind(cell_filt, cell_manual, cell_final)
+cell_counts$State <- factor(cell_counts$State, levels = levels(factor(cell_counts$State))[c(3,1,4,5,2)])
+cell_counts$Source <- factor(cell_counts$Source, levels = unique(cell_counts$Source))
+
+b <- cell_counts %>% 
+  ggplot(aes(x = Source, fill = State, y=Cells)) +
+  geom_bar(position = "stack", stat = "identity") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
+  annotate("text", x=seq(1,8), y = cell_final$Cells-500, label = cell_final$Cells)
+
+cowplot::ggsave2(plot = b, filename = "../data/processed/06-200310_Filt_Bar_cellcounts.pdf", height = 3, width = 6)
+```
+
+<!-- # Rgr expression -->
+<!-- ```{r} -->
+
+<!-- mueller_cells <- seu.final$CellType == "Mueller cell" -->
+<!-- rgr_cells <- sum(GetAssayData(seu.final, slot = "data")["Rgr", mueller_cells]>0) -->
+<!-- rgr_percet <- rgr_cells / length(mueller_cells[mueller_cells == T]) -->
+
+<!-- seu.tmp <- seu.final -->
+<!-- Idents(seu.tmp) <- seu.tmp$CellType -->
+<!-- a <- FeaturePlot(seu.tmp, features = "Rgr", label = T, repel = T, pt.size = 0.5) -->
+<!-- cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_Rgr.png")), width = 16, height = 12) -->
+<!-- ``` -->
+
+
+# Export seurat object
+```{r}
+
+# saveRDS(object = seu.filt, file = "../data/interim/seu_filt.06_200310_221021.rds")
+saveRDS(object = seu.final, file = "../data/interim/seu_final.06_200310_22109.rds")
+
+```

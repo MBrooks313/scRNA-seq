@@ -1,0 +1,124 @@
+---
+title: "02b_QC_plots 06_200310"
+output: html_notebook
+author: "Matthew J. Brooks"
+date_created: "October 4th, 2022"
+---
+
+
+This analysis merges the 06_200310 Seurat list object, performs normalization, and assigns cell type annotation.
+
+### Import Seurat list objects 
+```{r, message=FALSE}
+library(Seurat)
+
+# Get run info data
+seu <- readRDS("../data/interim/seu_merged_221028.rds")
+# seu_df.06_200310 <- readRDS("../data/interim/seu_df.06_200310_221007.rds")
+
+```
+
+
+### Create directories
+```{r}
+
+expt_nm <- "06_200310_dX_df_dX"
+dir_export <- file.path("../data/processed", expt_nm, "02_QC")
+
+dir.create(dir_export)
+
+```
+
+
+
+### QC plots
+```{r, message=FALSE}
+library(tidyverse)
+
+seu_obj <- c(seu.06_200310, seu_df.06_200310)
+expt_nms <- c("06_200310", "06_200310_df")
+
+for (i in 1:length(seu_obj)){
+  seu <- seu_obj[[i]]
+  expt_nm <- expt_nms[i]
+  
+  # Make plots
+  a <- VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA"),
+               group.by = "orig.ident", ncol = 2, log = T)
+  c <- VlnPlot(seu, features = c("percent.mt"), group.by = "orig.ident", ncol = 1)
+  
+  d <- DimPlot(seu, reduction = "umap", label = T, pt.size = 0.5) + NoLegend()
+  e <- DimPlot(seu, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'CellType')
+  f <- DimPlot(seu, group.by = "orig.ident", shuffle = T)
+  g <- DimPlot(seu, group.by = "age", shuffle = T)
+  h <- DimPlot(seu, group.by = "tissue", shuffle = T)
+  i <- DimPlot(object = seu, group.by = "tissue", split.by = "age", shuffle = T)
+
+  j <- FeaturePlot(seu, features = "nFeature_RNA", cols = c("grey95", "purple4"), max.cutoff = 3000)
+  k <- FeaturePlot(seu, features = "nCount_RNA", cols = c("grey95", "purple4"), max.cutoff = 10000)
+  m <- FeaturePlot(seu, features = c("Rho", "Nrl", "Opn1sw", "Opn1mw"), min.cutoff = 0)
+  
+  # Export plots
+  cowplot::ggsave2(plot = a, file = file.path(dir_export, paste0(expt_nm, "_Viol_feat-count_log.png")), width = 16, height = 8)
+  cowplot::ggsave2(plot = c, file = file.path(dir_export, paste0(expt_nm, "_Viol_percent.mt.png")), width = 8, height = 8)
+  
+  cowplot::ggsave2(plot = d, file = file.path(dir_export, paste0(expt_nm, "_Dim_cluster.png")), width = 12, height = 12)
+  cowplot::ggsave2(plot = e, file = file.path(dir_export, paste0(expt_nm, "_Dim_CellType.png")), width = 16, height = 12)
+  cowplot::ggsave2(plot = f, file = file.path(dir_export, paste0(expt_nm, "_Dim_origIdent.png")), width = 16, height = 12)
+  cowplot::ggsave2(plot = g, file = file.path(dir_export, paste0(expt_nm, "_Dim_age.png")), width = 16, height = 12)
+  cowplot::ggsave2(plot = h, file = file.path(dir_export, paste0(expt_nm, "_Dim_tissue.png")), width = 16, height = 12)
+  cowplot::ggsave2(plot = i, file = file.path(dir_export, paste0(expt_nm, "_Dim_indi_age.png")), width = 48, height = 12)
+  
+  cowplot::ggsave2(plot = j, file = file.path(dir_export, paste0(expt_nm, "_Feat_nFeat.png")), width = 16, height = 12)
+  cowplot::ggsave2(plot = k, file = file.path(dir_export, paste0(expt_nm, "_Feat_nCount.png")), width = 16, height = 12)
+  cowplot::ggsave2(plot = m, file = file.path(dir_export, paste0(expt_nm, "_Feat_RodCone.png")), width = 16, height = 12)
+}
+
+# seu <- seu.06_200310
+# 
+# # Make plots
+# a <- VlnPlot(seu, features = c("nFeature_RNA", "nCount_RNA"), group.by = "orig.ident", ncol = 2, log = T)
+# c <- VlnPlot(seu, features = c("percent.mt"), group.by = "orig.ident", ncol = 1)
+# 
+# d <- DimPlot(seu, reduction = "umap", label = T, pt.size = 0.5) + NoLegend()
+# e <- DimPlot(seu, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'CellType')        
+# f <- DimPlot(seu, group.by = "orig.ident", shuffle = T)
+# g <- DimPlot(seu, group.by = "age", shuffle = T)
+# h <- DimPlot(seu, group.by = "tissue", shuffle = T)
+# i <- DimPlot(object = seu, group.by = "tissue", split.by = "age", shuffle = T)
+# 
+# j <- FeaturePlot(seu, features = "nFeature_RNA", cols = c("grey95", "purple4"), max.cutoff = 3000)
+# k <- FeaturePlot(seu, features = "nCount_RNA", cols = c("grey95", "purple4"), max.cutoff = 10000)
+# 
+# # Export plots
+# cowplot::ggsave2(plot = a, file = file.path(dir_export, paste0(expt_nm, "_Viol_feat-count_log.png")), width = 16, height = 8)
+# cowplot::ggsave2(plot = c, file = file.path(dir_export, paste0(expt_nm, "_Viol_percent.mt.png")), width = 8, height = 8)
+# 
+# cowplot::ggsave2(plot = d, file = file.path(dir_export, paste0(expt_nm, "_Dim_cluster.png")), width = 12, height = 12)
+# cowplot::ggsave2(plot = e, file = file.path(dir_export, paste0(expt_nm, "_Dim_CellType.png")), width = 16, height = 12)
+# cowplot::ggsave2(plot = f, file = file.path(dir_export, paste0(expt_nm, "_Dim_origIdent.png")), width = 16, height = 12)
+# cowplot::ggsave2(plot = g, file = file.path(dir_export, paste0(expt_nm, "_Dim_age.png")), width = 16, height = 12)
+# cowplot::ggsave2(plot = h, file = file.path(dir_export, paste0(expt_nm, "_Dim_tissue.png")), width = 16, height = 12)
+# cowplot::ggsave2(plot = i, file = file.path(dir_export, paste0(expt_nm, "_Dim_indi_age.png")), width = 48, height = 12)
+# 
+# cowplot::ggsave2(plot = j, file = file.path(dir_export, paste0(expt_nm, "_Feat_nFeat.png")), width = 16, height = 12)
+# cowplot::ggsave2(plot = k, file = file.path(dir_export, paste0(expt_nm, "_Feat_nCount.png")), width = 16, height = 12)
+
+
+```
+
+
+# Export tables
+```{r}
+
+write.table(x = as.data.frame(table(seu$orig.ident)), 
+            file = file.path(dir_export, paste0(expt_nm, "_orig.ident_count.tsv")),
+          quote = F, row.names = F, sep = "\t")
+write.table(x = as.data.frame(table(seu$CellType)), 
+            file = file.path(dir_export, paste0(expt_nm, "_celltype_count.tsv")),
+          quote = F, row.names = F, sep = "\t")
+```
+
+
+
+

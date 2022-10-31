@@ -1,0 +1,80 @@
+---
+title: "00_DataImport"
+output: html_notebook
+author: "Matthew J. Brooks"
+date_created: "October 3rd, 2022"
+---
+
+
+This analysis imports the scRNA-seq data into one Seurat object.
+
+Filtering: Bustools, min.cells = 5, min.features = 200, percent.mt = 20
+Use DoubletFinder to eliminate heterotypic doublets.
+
+
+### Get kallisto out files
+```{r, message=FALSE, warning=FALSE}
+library(jsonlite)
+
+# Get run info data
+run_info_files <- list.files(path = "../data/raw", pattern = "run_info.json", recursive = T, full.names = T)
+run_info_files <- run_info_files[c(13:16, 3:4, 9:10,
+                                           11:12, 1:2, 5:8)]
+names(run_info_files) <- gsub(".+mm_ret_(.+)\\/run_info.+", "\\1", run_info_files)
+
+```
+
+### Helper scripts
+```{r, message=FALSE, warning=FALSE}
+source("../src/data/kallisto_import.R")
+
+```
+
+### Import kallisto data
+```{r, message=FALSE, warning=FALSE}
+
+# Import 06-200310 data
+seu_out <- kallisto_import(files = run_info_files[9:16], expt_nm = "06-200310_dX_df", 
+                           gtf = "../data/external/gencode.vM25.annotation.gtf")
+
+seu_out.06_200310 <- seu_out
+
+# # Import 06-200310 data
+# seu_out <- kallisto_import(files = run_info_files[1:8], expt_nm = "03-190621", 
+#                            gtf = "../data/external/gencode.vM25.annotation.gtf")
+# 
+# seu_out.03_190621 <- seu_out
+```
+
+# Export seurat list objects
+```{r}
+
+
+# # Export dub_df
+dub_df.06_200310 <- seu_out.06_200310[["dub_df"]]
+saveRDS(object = dub_df.06_200310, file = "../data/interim/dub_df.06-200310.rds")
+
+# dub_df.06_200310 <- seu_out.06_200310[["dub_df"]]
+# save(list = "dub_df.06_200310", file = "../data/interim/dub_df.06-200310.Rdata")
+# 
+# dub_df.03_190621 <- seu_out.03_190621[["dub_df"]]
+# save(list = "dub_df.03_190621", file = "../data/interim/dub_df.03-190621.Rdata")
+# 
+# # Export dub filt
+# seu_list.06_200310 <- seu_out.06_200310[["seu_list"]]
+# save(list = "seu_list.06_200310", file = "../data/interim/seu_list.06-200310.Rdata")
+# 
+# seu_list.03_190621 <- seu_out.03_190621[["seu_list"]]
+# save(list = "seu_list.03_190621", file = "../data/interim/seu_list.03-190621.Rdata")
+# 
+# # Export non-dub filt
+seu_list_dub.06_200310 <- seu_out.06_200310[["seu_dub_list"]]
+saveRDS(object = seu_list_dub.06_200310, file = "../data/interim/seu_list_dub.06-200310.rds")
+
+# seu_list_dub.06_200310 <- seu_out.06_200310[["seu_dub_list"]]
+# save(list = "seu_list_dub.06_200310", file = "../data/interim/seu_list_dub.06-200310.Rdata")
+# 
+# seu_list_dub.03_190621 <- seu_out.03_190621[["seu_dub_list"]]
+# save(list = "seu_list_dub.03_190621", file = "../data/interim/seu_list_dub.03-190621.Rdata")
+
+```
