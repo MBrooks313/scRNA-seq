@@ -3,7 +3,7 @@
 
 
 
-kallisto_import <- function(files, expt_nm, bus_filt = TRUE, min.cells = 5, min.features = 200, max.mt = 20, helper_dir = "../src/data", out_dir = "../data/processed", gtf){
+kallisto_import <- function(files, expt_nm, bus_filt=TRUE, min.cells=5, min.features=200, max.mt=20, dX=TRUE, dF=TRUE, dub_exp=0.075, dub_counts="decontXcounts", helper_dir="../src/data", out_dir="../data/processed", gtf){
   
   
   ##########################
@@ -16,12 +16,15 @@ kallisto_import <- function(files, expt_nm, bus_filt = TRUE, min.cells = 5, min.
   # min.cells <- minumum number of cells for gene to be kept, default = 5 
   # min.features <- minimum genes per cell to be kept, default = 200
   # max.mt <- maximum mitochondrial content per cell
+  # dX <- run the decontX protocol
+  # dF <- run the DoubletFinder protocol
+  # dub_exp <- expected percentage of doublets (based on 10X protocol manual)
+  # dub_counts <- count assay to use in doubletFinder, one of c("RNA", "decontXcounts")
   # helper_dir <- directory of helper scripts (tr2g.R, read_count_output.R)
   # out_dir <- directory of output directories (tr2g.R, read_count_output.R)
   # gtf <- location of the gtf file for transcript to gene table creation
   #
   # Value
-  # seu_dub_list - Seurat object list with singlet and doublet cells
   # seu_list - Seurat object list with doublet cells filtered out
   # dub_df - data.frame of resulting cell counts at each filtration step
   ##########################
@@ -39,7 +42,6 @@ kallisto_import <- function(files, expt_nm, bus_filt = TRUE, min.cells = 5, min.
   
   # Empty lists for return
   seu_list <- list()
-  seu_dub_list <- list()
   dub_df <- data.frame()
   
   # Prepare output directories
@@ -86,38 +88,46 @@ kallisto_import <- function(files, expt_nm, bus_filt = TRUE, min.cells = 5, min.
     
     # Subset for cells with less than 20% MT
     seu_tmp <- subset(seu_tmp, subset = percent.mt < max.mt)
-    
+    mt_cells <- dim(seu_tmp)[2]
+
     # Run decontX to get rid of ambiant RNA contamination
-    print("Running decontX...")
-    seu_tmp <- decX(seu_tmp)
+    if (dX){
+      
+      print("Running decontX...")
+      seu_tmp <- decX(seu_tmp)
+    }
     
+
     # Run DoubletFinder
-    print("Running DoubletFinder...")
+    if (dF){
+      
+      print("Running DoubletFinder...")
     
-    seu_dub <- dub_find(seu_tmp, expect_dub = 0.075, sct = TRUE, assay_counts = "decontXcounts")
+      seu_tmp <- dub_find(seu_tmp, expect_dub = dub_exp, sct = TRUE, assay_counts = dub_counts)
     
-    # Plots for doublet finder
-    print("Making DoubletFinder plots...")
+      # Plots for doublet finder
+      print("Making DoubletFinder plots...")
+
+      df_nm <- tail(colnames(seu_tmp@meta.data), n = 1)
+      a <- DimPlot(seu_tmp, group.by = df_nm)
+      b <- VlnPlot(seu_tmp, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2, log = T, group.by = df_nm)
+      
+      cowplot::ggsave2(plot = a, file = file.path(out_qc, paste0(expt_nm, "_Dim_Dub_", samp_nm, ".png")), width = 12, height = 8)
+      cowplot::ggsave2(plot = b, file = file.path(out_qc, paste0(expt_nm, "_Viol_feat-count_", samp_nm, ".png")), width = 6, height = 4)
+
+      # Make a Seurat object for filtered cells
+      seu_tmp <- AddMetaData(seu_tmp, seu_tmp@meta.data[[df_nm]], col.name = "DubFind")
+      
+      # Filter out doublets
+      print("Filter out doublets...")
+      seu_tmp <- subset(seu_tmp, subset = DubFind == "Singlet")
+    }
     
-    df_nm <- tail(colnames(seu_dub@meta.data), n = 1)
-    a <- DimPlot(seu_dub, group.by = df_nm)
-    b <- VlnPlot(seu_dub, features = c("nFeature_RNA", "nCount_RNA"), ncol = 2, log = T, group.by = df_nm)
     
-    cowplot::ggsave2(plot = a, file = file.path(out_qc, paste0(expt_nm, "_Dim_Dub_", samp_nm, ".png")), width = 12, height = 8)
-    cowplot::ggsave2(plot = b, file = file.path(out_qc, paste0(expt_nm, "_Viol_feat-count_", samp_nm, ".png")), width = 6, height = 4)
-    
-    # Make a Seurat object for filtered cells
-    seu_filt <- seu_dub
-    seu_filt <- AddMetaData(seu_filt, seu_dub@meta.data[[df_nm]], col.name = "DubFind")
-    
-    # Filter out doublets
-    print("Filter out doublets...")
-    seu_filt <- subset(seu_filt, subset = DubFind == "Singlet")
     
     # Get cell numbers for data.frame
     og_cells <- dim(res_mat_filt)[2]
-    mt_cells <- dim(seu_tmp)[2]
-    filt_cells <- dim(seu_filt)[2]
+    filt_cells <- dim(seu_tmp)[2]
     
     tmp_df <- tibble(c("orig_cells", 
                        "orig_filt", 
@@ -133,15 +143,14 @@ kallisto_import <- function(files, expt_nm, bus_filt = TRUE, min.cells = 5, min.
     dub_df <- rbind(dub_df, tmp_df)
     
     # Add Seurat object to list
-    seu_dub_list[[samp_nm]] <- seu_dub
-    seu_list[[samp_nm]] <- seu_filt
+    seu_list[[samp_nm]] <- seu_tmp
     
   }
   
   # Return objects
-  seu_out <- list("seu_dub_list" = seu_dub_list,
-                  "seu_list" = seu_list,
-                  "dub_df" = dub_df)
+  seu_out <- list("dub_df" = dub_df,
+                  "seu_list" = seu_list)
+        
   return(seu_out)
   
 }
