@@ -1,5 +1,5 @@
 ---
-title: "01c_Norm_Annotation"
+title: "01_Norm_Annotation"
 output: html_notebook
 author: "Matthew J. Brooks"
 date_created: "October 28th, 2022"
@@ -8,23 +8,39 @@ date_created: "October 28th, 2022"
 
 This analysis merges the 06_200310 Seurat list object, performs decontX, then normalization, and assigns cell type annotation.
 
-### Import Seurat list objects 
+### Import Seurat list objects, download Cell type file, helper scripts, and create directories 
 ```{r, message=FALSE}
 library(Seurat)
 
-proj_nm <- "06_200310"
+proj_nm <- "experiment"
+expt_nm <- proj_nm
 
+script_dir <- "https://raw.githubusercontent.com/MBrooks313/scRNA-seq/main"
+dest_tools_dir <- "../src/tools"
+
+################
 # Get Seurat list object from 00_Data_import
-seu_list <- readRDS("../data/interim/seu_list_dub.06-200310.rds")
+seu_list <- readRDS("../data/interim/seu_list_00_import.rds")
 
-```
 
-### Create directories
-```{r}
+################
+# Download cell type file
+download.file(url = file.path(script_dir, "Retina_Cell_type_MB.xlsx"), 
+              destfile = file.path(dest_tools_dir, "Retina_Cell_type_MB.xlsx"), 
+              method = "curl")
 
-expt_nm <- "06_200310_dX_df_dX"
+
+################
+# Download helper scripts
+download.file(url = file.path(script_dir, "sctype_ann.R"), 
+              destfile = file.path(dest_tools_dir, "sctype_ann.R"), 
+              method = "curl")
+
+
+################
+# Create directories
+
 dir_export <- file.path("../data/processed", expt_nm, "01_Norm_Annotation")
-
 dir.create(dir_export, recursive = T)
 
 ```
@@ -34,15 +50,10 @@ dir.create(dir_export, recursive = T)
 
 ################
 # Merge data
-seu <- merge(x = seu_list[[1]], seu_list[2:8], 
+
+seu <- merge(x = seu_list[[1]], seu_list[2:length(seu_list)], 
                        add.cell.ids = names(seu_list), 
                        project = proj_nm)
-
-
-################
-## Get rid of DoubletFinder doublets
-dubfind <- rowSums(sapply(seu@meta.data, function(x){x == "Doublet"}), na.rm = T) == 0
-seu <- seu[,dubfind]
 
 ```
 
@@ -50,22 +61,23 @@ seu <- seu[,dubfind]
 ### Add meta features to Seurat object
 ```{r}
 
-# Add age and tissue to meta.data
-age <- gsub("(.+)_.+", "\\1", seu@meta.data$orig.ident)
-tissue <- gsub(".+_(.+)", "\\1", seu@meta.data$orig.ident)
+################
+# Add data to meta.data
+# age <- gsub("(.+)_.+", "\\1", seu@meta.data$orig.ident)
+# tissue <- gsub(".+_(.+)", "\\1", seu@meta.data$orig.ident)
 
-seu <- AddMetaData(seu, age, col.name = "age")
-seu <- AddMetaData(seu, tissue, col.name = "tissue")
+# seu <- AddMetaData(seu, age, col.name = "age")
+# seu <- AddMetaData(seu, tissue, col.name = "tissue")
 
 # Adjust factors
-seu@meta.data$orig.ident <- factor(seu@meta.data$orig.ident, 
-                                             levels = unique(seu@meta.data$orig.ident))
+# seu@meta.data$orig.ident <- factor(seu@meta.data$orig.ident, 
+                                             # levels = unique(seu@meta.data$orig.ident))
 
-seu@meta.data$age <- factor(seu@meta.data$age, 
-                                      levels = unique(seu@meta.data$age))
+# seu@meta.data$age <- factor(seu@meta.data$age, 
+                                      # levels = unique(seu@meta.data$age))
 
-seu@meta.data$tissue <- factor(seu@meta.data$tissue, 
-                                         levels = unique(seu@meta.data$tissue))
+# seu@meta.data$tissue <- factor(seu@meta.data$tissue, 
+                                      # levels = unique(seu@meta.data$tissue))
 
 ```
 
@@ -94,14 +106,16 @@ seu <- SCTransform(seu, assay = "decontXcounts") %>%
 
 
 
-### Add annotation
+### Add Ccell type annotation
 ```{r, message=FALSE}
 library(tidyverse)
-source("../src/data/sctype_ann_v2.R")
+
+source(file.path(dest_tools_dir, "sctype_ann.R")
 
 ##################
 ## Sanes cell-type
-gs_sanes_file <- "/Volumes/Accelsior_8M2/scRNAseq/scRNA_aging/221001/data/external/Cell_type_MB.xlsx"
+
+gs_sanes_file <- file.path(dest_tools_dir, "Retina_Cell_type_MB.xlsx")
 
 raw_gs_sanes <- readxl::read_excel(gs_sanes_file)
 
@@ -122,7 +136,8 @@ sctypes = c("Astrocytes", "Immune cells", "Retinal pigment epithelial cells")
 ################
 # Perform cell type annotation at sub cell type level
 seu <- sctype_ann(seu, gs_pos = gs_sanes_sub, 
-                       sctypes = c("Astrocytes", "Immune cells", "Retinal pigment epithelial cells"))
+                  sctypes = c("Astrocytes", "Immune cells", "Retinal pigment epithelial cells"),
+                  assay_data = "SCT")
 
 # Add sub cell type annotation to metadata
 seu <- AddMetaData(seu, metadata = seu$CellType, col.name = "SubCellType")
@@ -160,6 +175,6 @@ cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Di
 ### Export Seurat object
 ```{r}
 
-saveRDS(object = seu, file = "../data/interim/seu_merged_221028.rds")
+saveRDS(object = seu, file = "../data/interim/seu_merged_01_norm.rds")
 
 ```
