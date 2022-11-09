@@ -32,11 +32,28 @@ script_dir <- "https://raw.githubusercontent.com/MBrooks313/scRNA-seq/main"
 dest_tools_dir <- "../src/tools"
 dest_vis_dir <- "../src/visualization"
 
-system(paste0("cp ", file.path(script_dir, "kallisto_import.R"), " ", dest_tools_dir))
-system(paste0("cp ", file.path(script_dir, "decontX.R"), " ", dest_tools_dir))
-system(paste0("cp ", file.path(script_dir, "doublet_Finder.R"), " ", dest_tools_dir))
+download.file(url = file.path(script_dir, "get_tr2g.R"), 
+              destfile = file.path(dest_tools_dir, "get_tr2g.R"), 
+              method = "curl")
 
-source("../src/data/kallisto_import.R")
+download.file(url = file.path(script_dir, "read_count_output.R"), 
+              destfile = file.path(dest_tools_dir, "read_count_output.R"), 
+              method = "curl")
+
+download.file(url = file.path(script_dir, "kallisto_import.R"), 
+              destfile = file.path(dest_tools_dir, "kallisto_import.R"), 
+              method = "curl")
+
+download.file(url = file.path(script_dir, "decontX.R"), 
+              destfile = file.path(dest_tools_dir, "decontX.R"), 
+              method = "curl")
+
+download.file(url = file.path(script_dir, "doublet_Finder.R"), 
+              destfile = file.path(dest_tools_dir, "doublet_Finder.R"), 
+              method = "curl")
+
+
+source(file.path(dest_tools_dir, "kallisto_import.R"))
 
 ```
 
@@ -46,6 +63,7 @@ source("../src/data/kallisto_import.R")
 # Import data
 seu_out <- kallisto_import(files = run_info_files, 
                            expt_nm = expt_nm, 
+                           helper_dir = dest_tools_dir,
                            gtf = gtf_file)
 
 seu_out <- seu_out
