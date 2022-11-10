@@ -6,7 +6,7 @@ date_created: "October 28th, 2022"
 ---
 
 
-This analysis merges the 06_200310 Seurat list object, performs decontX, then normalization, and assigns cell type annotation.
+This analysis merges the Seurat list object, performs decontX, then normalization, and assigns cell type annotation.
 
 ### Import Seurat list objects, download Cell type file, helper scripts, and create directories 
 ```{r, message=FALSE}
@@ -71,20 +71,20 @@ seu <- merge(x = seu_list[[1]], seu_list[2:length(seu_list)],
 
 # Adjust factors
 # seu@meta.data$orig.ident <- factor(seu@meta.data$orig.ident, 
-                                             # levels = unique(seu@meta.data$orig.ident))
+                                    # levels = unique(seu@meta.data$orig.ident))
 
 # seu@meta.data$age <- factor(seu@meta.data$age, 
-                                      # levels = unique(seu@meta.data$age))
+                                # levels = unique(seu@meta.data$age))
 
 # seu@meta.data$tissue <- factor(seu@meta.data$tissue, 
-                                      # levels = unique(seu@meta.data$tissue))
+                                # levels = unique(seu@meta.data$tissue))
 
 ```
 
 
 ### Run decontX on merged data
 ```{r}
-source("../src/data/decontX.R")
+source(file.path(dest_tools_dir, "decontX.R"))
 
 seu <- decX(seu)
 
@@ -110,7 +110,7 @@ seu <- SCTransform(seu, assay = "decontXcounts") %>%
 ```{r, message=FALSE}
 library(tidyverse)
 
-source(file.path(dest_tools_dir, "sctype_ann.R")
+source(file.path(dest_tools_dir, "sctype_ann.R"))
 
 ##################
 ## Sanes cell-type
@@ -168,6 +168,50 @@ cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Di
 
 a <- DimPlot(seu, reduction = "umap", label = TRUE, repel = TRUE, group.by = 'CellType')
 cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_CellTypeAnn_merged.png")), width = 16, height = 12)
+
+a <- DimPlot(seu, reduction = "umap", label = TRUE, repel = TRUE)
+cowplot::ggsave2(plot = a, filename = file.path(dir_export, paste0(expt_nm, "_Dim_cluster_merged.png")), width = 16, height = 12)
+
+```
+
+
+### Get cell type gene markers for seu
+```{r}
+seu.celltype <- seu
+
+# Change Idents to vell type
+Idents(seu.celltype) <- seu.celltype$CellType
+
+# Find cell type markers
+seu.cellmarkers <- FindAllMarkers(seu.celltype, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+write.table(seu.cellmarkers, file = file.path(dir_export, paste0(expt_nm, "_celltype_markers_merged.tsv")), quote = F, row.names = F, sep = "\t")
+
+# seu.cellmarkers %>%
+#     group_by(cluster) %>%
+#     top_n(n = 10, wt = avg_log2FC) -> top10
+# 
+# t10 <- DoHeatmap(seu, features = top10$gene) + NoLegend()
+# cowplot::ggsave2(plot = t10, file = "../data/processed/06_200310_celltype_Top10_res08.png", width = 24, height = 32)
+
+```
+
+
+## Get cluster gene markers for seu
+```{r}
+
+# Find cluster markers
+seu.clustermarkers <- FindAllMarkers(seu, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+
+write.table(seu.clustermarkers, file = file.path(dir_export, paste0(expt_nm, "_cluster_markers_merged.tsv")), quote = F, row.names = F, sep = "\t")
+
+# seu.cellmarkers %>%
+#     group_by(cluster) %>%
+#     top_n(n = 10, wt = avg_log2FC) -> top10
+# 
+# t10 <- DoHeatmap(seu, features = top10$gene) + NoLegend()
+# cowplot::ggsave2(plot = t10, file = "../data/processed/06_200310_celltype_Top10_res08.png", width = 24, height = 32)
+
 
 ```
 
