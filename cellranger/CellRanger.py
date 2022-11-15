@@ -68,7 +68,8 @@ rule all:
 
 rule cellranger:
    input:
-            BASE_DIR + "/{sample}"
+            samp = "{sample}",
+            fq = BASE_DIR + "/{sample}"
    output:
             "{sample}/outs/web_summary.html",
             "{sample}/outs/raw_feature_bc_matrix.h5",
@@ -82,8 +83,8 @@ rule cellranger:
    shell: """
    module load cellranger/{version} || exit 1;
    cellranger count \
-   --id {input} \
-   --fastqs {input} \
+   --id {input.samp} \
+   --fastqs {input.fq} \
    --transcriptome {params.ref} \
    --localcores $SLURM_CPUS_PER_TASK \
    --localmem 120 \
