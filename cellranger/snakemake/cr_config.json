@@ -1,5 +1,4 @@
 {
-	"work_dir"	:	"/Volumes/data-1/scRNA-seq/06_200310",
 	"cr_ver"	:	"7.0.1",
 	"cr_ref"	:	"$CELLRANGER_REF/refdata-gex-mm10-2020-A",
 	"job_all"	:   "--time=24:00:00 --mem=4G  --cpus-per-task=2 --gres=lscratch:100",
