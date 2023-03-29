@@ -3,7 +3,7 @@
 
 
 
-cr_import <- function(files, expt_nm, min.cells=5, min.features=200, max.mt=20, dX=TRUE, dF=TRUE, dub_exp=0.075, dub_counts="decontXcounts", helper_dir="../src/data", out_dir="../data/processed"){
+cr_import <- function(files, expt_nm, min.cells=5, min.features=200, max.mt=20, dX=TRUE, dF=TRUE, dub_exp=0.075, dub_counts="RNA", dub_remove=FALSE, helper_dir="../src/data", out_dir="../data/processed"){
   
   
   
@@ -20,11 +20,12 @@ cr_import <- function(files, expt_nm, min.cells=5, min.features=200, max.mt=20, 
   # dF <- run the DoubletFinder protocol
   # dub_exp <- expected percentage of doublets (based on 10X protocol manual)
   # dub_counts <- count assay to use in doubletFinder, one of c("RNA", "decontXcounts")
+  # dub_remove <- whether to remove the cells maker as doublets (default = FALSE)
   # helper_dir <- directory of helper scripts (tr2g.R, read_count_output.R)
   # out_dir <- directory of output directories (tr2g.R, read_count_output.R)
   #
   # Value
-  # seu_list - Seurat object list with doublet cells filtered out
+  # seu_list - Seurat object list with doublet cells marked/filtered out
   # dub_df - data.frame of resulting cell counts at each filtration step
   ##########################
   
@@ -102,14 +103,17 @@ cr_import <- function(files, expt_nm, min.cells=5, min.features=200, max.mt=20, 
       seu_tmp <- AddMetaData(seu_tmp, seu_tmp@meta.data[[df_nm]], col.name = "DubFind")
       
       # Filter out doublets
-      print("Filter out doublets...")
-      seu_tmp <- subset(seu_tmp, subset = DubFind == "Singlet")
+      if (dub_remove){
+        print("Filter out doublets...")
+        seu_tmp <- subset(seu_tmp, subset = DubFind == "Singlet")
+      }
+      
     }
     
     
     # Get cell numbers for data.frame
     og_cells <- dim(cr_h5)[2]
-    filt_cells <- dim(seu_tmp)[2]
+    filt_cells <- sum(seu_tmp$Dubfind == "Singlet")
     
     tmp_df <- tibble(c("orig_cells", 
                        "orig_filt", 
