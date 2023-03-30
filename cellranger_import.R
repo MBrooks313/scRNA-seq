@@ -113,7 +113,7 @@ cr_import <- function(files, expt_nm, min.cells=5, min.features=200, max.mt=20, 
     
     # Get cell numbers for data.frame
     og_cells <- dim(cr_h5)[2]
-    filt_cells <- sum(seu_tmp$Dubfind == "Singlet")
+    filt_cells <- sum(seu_tmp$DubFind == "Singlet")
     
     tmp_df <- tibble(c("orig_cells", 
                        "orig_filt", 
