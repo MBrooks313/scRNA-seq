@@ -2,7 +2,7 @@
 # This function performs annotation on Seurat object
 
 
-sctype_ann <- function(seu, gs_pos=NULL, gs_neg=NULL, sctissue="Eye", sctypes=NULL, assay_data="RNA"){
+sctype_ann <- function(seu, gs_pos=NULL, gs_neg=NULL, sctissue="Eye", sctypes=NULL, assay_data="RNA", clust_nm="seurat_clusters"){
   
   
   ##########################
@@ -15,6 +15,7 @@ sctype_ann <- function(seu, gs_pos=NULL, gs_neg=NULL, sctissue="Eye", sctypes=NU
   # tissue <- tissue to pull scType db cell annotations 
   # sctypes <- additional cell types pulled from scType db 
   # assay_scale <- assay scaled.data slot used for cell type scoring, c("RNA", "SCT", "integrated") 
+  # clust_nm <- column name of clusters from meta column
   #
   # Value
   # seu <- Seurat object with annotation
@@ -54,9 +55,9 @@ sctype_ann <- function(seu, gs_pos=NULL, gs_neg=NULL, sctissue="Eye", sctypes=NU
                         gs = gs_pos, gs2 = gs_neg) 
   
   # merge by cluster
-  cL_resutls = do.call("rbind", lapply(unique(seu@meta.data$seurat_clusters), function(cl){
-    es.max.cl = sort(rowSums(es.max[ ,rownames(seu@meta.data[seu@meta.data$seurat_clusters==cl, ])]), decreasing = !0)
-    head(data.frame(cluster = cl, type = names(es.max.cl), scores = es.max.cl, ncells = sum(seu@meta.data$seurat_clusters==cl)), 10)
+  cL_resutls = do.call("rbind", lapply(unique(seu@meta.data[,clust_nm]), function(cl){
+    es.max.cl = sort(rowSums(es.max[ ,rownames(seu@meta.data[seu@meta.data[,clust_nm]==cl, ])]), decreasing = !0)
+    head(data.frame(cluster = cl, type = names(es.max.cl), scores = es.max.cl, ncells = sum(seu@meta.data[,clust_nm]==cl)), 10)
   }))
   sctype_scores = cL_resutls %>% group_by(cluster) %>% top_n(n = 1, wt = scores)  
   
@@ -67,7 +68,7 @@ sctype_ann <- function(seu, gs_pos=NULL, gs_neg=NULL, sctissue="Eye", sctypes=NU
   seu@meta.data$CellType = ""
   for(j in unique(sctype_scores$cluster)){
     cl_type = sctype_scores[sctype_scores$cluster==j,]; 
-    seu@meta.data$CellType[seu@meta.data$seurat_clusters == j] = as.character(cl_type$type[1])
+    seu@meta.data$CellType[seu@meta.data[,clust_nm] == j] = as.character(cl_type$type[1])
   }
   
   return(seu)
