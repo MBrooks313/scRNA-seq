@@ -95,11 +95,12 @@ multiDotPlot <- function(dat_seu, feat, xval, xval_ord, grp, grp_ord, assay_exp=
   tmp_plot <- df %>% 
     
     mutate(`% Expressing` = (cell_exp_ct/cell_ct) * 100,
-           Grp = factor(grp, levels = xval_ord),
-           Gene = factor(Gene, levels = rev(sort(unique(Gene))))) %>% 
+           Age = factor(Age, levels = xval_ord),
+           Gene = factor(Gene, levels = rev(feat)),
+           Grp = factor(CellType, levels = grp_ord)) %>% 
     filter(Count > 0, `% Expressing` > 1) %>% 
     
-    ggplot(aes(x=Age, y = Gene, group = CellType, color = Zscore, size = `% Expressing`)) + 
+    ggplot(aes(x=Age, y = Gene, group = Grp, color = Zscore, size = `% Expressing`)) + 
     geom_point() +
     scale_size_continuous(limits = c(0,100)) +
     theme(axis.line  = element_blank()) +
@@ -112,7 +113,7 @@ multiDotPlot <- function(dat_seu, feat, xval, xval_ord, grp, grp_ord, assay_exp=
                           # limits = c(-3,3), oob = scales::squish,
                           name = 'Average Expression') + 
     ggtitle(title_name) +
-    facet_grid(.~CellType, scales = "fixed") 
+    facet_grid(.~Grp, scales = "fixed") 
   
   return(tmp_plot)
 }
@@ -131,7 +132,7 @@ multiDotPlot <- function(dat_seu, feat, xval, xval_ord, grp, grp_ord, assay_exp=
 # xval <- "age"
 # xval_ord <- dat_seu$age %>% unique()
 # grp <- "rod_cluster"
-# grp_ord <- dat_seu$rod_cluster %>% unique()
+# grp_ord <- dat_seu$rod_cluster %>% unique() %>% rev()
 # assay_exp="SCT"
 # cnt_exp="data"
 # assay_pop="RNA"
