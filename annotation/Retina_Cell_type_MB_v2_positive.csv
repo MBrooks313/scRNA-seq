@@ -1,0 +1,258 @@
+﻿cell_type,sub_cell_type,gene
+Rod bipolar,Rod bipolar,Vsx2
+Rod bipolar,Rod bipolar,Otx2
+Rod bipolar,Rod bipolar,Grm6
+Rod bipolar,Rod bipolar,Isl1
+Rod bipolar,Rod bipolar,Prkca
+Rod bipolar,Rod bipolar,Car8
+Rod bipolar,Rod bipolar,Sebox
+Rod bipolar,Rod bipolar,Cabp5
+Rod bipolar,Rod bipolar,Vstm2b
+Rod bipolar,Rod bipolar,Casp7
+OFF cone bipolar,BC1A,Vsx2
+OFF cone bipolar,BC1A,Otx2
+OFF cone bipolar,BC1A,Scgn
+OFF cone bipolar,BC1A,Tacr3
+OFF cone bipolar,BC1A,Cabp5
+OFF cone bipolar,BC1A,Pcdh17
+OFF cone bipolar,BC1B,Vsx2
+OFF cone bipolar,BC1B,Otx2
+OFF cone bipolar,BC1B,Scgn
+OFF cone bipolar,BC1B,Tacr3
+OFF cone bipolar,BC1B,Cabp5
+OFF cone bipolar,BC1B,Pcdh10
+OFF cone bipolar,BC2,Vsx2
+OFF cone bipolar,BC2,Otx2
+OFF cone bipolar,BC2,Scgn
+OFF cone bipolar,BC2,Tacr3
+OFF cone bipolar,BC2,Syt2
+OFF cone bipolar,BC2,Irx6
+OFF cone bipolar,BC2,Grik1
+OFF cone bipolar,BC2,Vsx1
+OFF cone bipolar,BC2,Chrm2
+OFF cone bipolar,BC2,Neto1
+OFF cone bipolar,BC3A,Vsx2
+OFF cone bipolar,BC3A,Otx2
+OFF cone bipolar,BC3A,Scgn
+OFF cone bipolar,BC3A,Irx6
+OFF cone bipolar,BC3A,Grik1
+OFF cone bipolar,BC3A,Cabp5
+OFF cone bipolar,BC3A,Erbb4
+OFF cone bipolar,BC3A,Hcn4
+OFF cone bipolar,BC3B,Vsx2
+OFF cone bipolar,BC3B,Otx2
+OFF cone bipolar,BC3B,Scgn
+OFF cone bipolar,BC3B,Prkar2b
+OFF cone bipolar,BC3B,Grik1
+OFF cone bipolar,BC3B,Cabp5
+OFF cone bipolar,BC3B,Nnat
+OFF cone bipolar,BC4,Vsx2
+OFF cone bipolar,BC4,Otx2
+OFF cone bipolar,BC4,Scgn
+OFF cone bipolar,BC4,Grik1
+OFF cone bipolar,BC4,Cabp5
+OFF cone bipolar,BC4,Nnat
+OFF cone bipolar,BC4,Col11a1
+ON cone bipolar,BC5A,Vsx2
+ON cone bipolar,BC5A,Otx2
+ON cone bipolar,BC5A,Scgn
+ON cone bipolar,BC5A,Isl1
+ON cone bipolar,BC5A,Grm6
+ON cone bipolar,BC5A,Kcng4
+ON cone bipolar,BC5A,Cabp5
+ON cone bipolar,BC5A,Sox6
+ON cone bipolar,BC5B,Vsx2
+ON cone bipolar,BC5B,Otx2
+ON cone bipolar,BC5B,Scgn
+ON cone bipolar,BC5B,Isl1
+ON cone bipolar,BC5B,Grm6
+ON cone bipolar,BC5B,Cabp5
+ON cone bipolar,BC5B,Nnat
+ON cone bipolar,BC5B,Chrm2
+ON cone bipolar,BC5B,Pcdh17
+ON cone bipolar,BC5C,Vsx2
+ON cone bipolar,BC5C,Otx2
+ON cone bipolar,BC5C,Scgn
+ON cone bipolar,BC5C,Isl1
+ON cone bipolar,BC5C,Grm6
+ON cone bipolar,BC5C,Slitrk5
+ON cone bipolar,BC5C,Pcdh17
+ON cone bipolar,BC5C,Pcdh10
+ON cone bipolar,BC5D,Vsx2
+ON cone bipolar,BC5D,Otx2
+ON cone bipolar,BC5D,Isl1
+ON cone bipolar,BC5D,Kcng4
+ON cone bipolar,BC5D,Cabp5
+ON cone bipolar,BC5D,Nnat
+ON cone bipolar,BC5D,Lrrtm1
+ON cone bipolar,BC6,Vsx2
+ON cone bipolar,BC6,Otx2
+ON cone bipolar,BC6,Scgn
+ON cone bipolar,BC6,Isl1
+ON cone bipolar,BC6,Grm6
+ON cone bipolar,BC6,Vsx1
+ON cone bipolar,BC6,Cck
+ON cone bipolar,BC7,Vsx2
+ON cone bipolar,BC7,Otx2
+ON cone bipolar,BC7,Scgn
+ON cone bipolar,BC7,Isl1
+ON cone bipolar,BC7,Grm6
+ON cone bipolar,BC7,Vsx1
+ON cone bipolar,BC7,Igfn1
+ON cone bipolar,BC7,Pcdh17
+ON cone bipolar,BC8,Vsx2
+ON cone bipolar,BC8,Otx2
+ON cone bipolar,BC8,Isl1
+ON cone bipolar,BC8,Grm6
+ON cone bipolar,BC8,Serpini1
+ON cone bipolar,BC8,Spock3
+ON cone bipolar,BC9,Vsx2
+ON cone bipolar,BC9,Otx2
+ON cone bipolar,BC9,Isl1
+ON cone bipolar,BC9,Grm6
+ON cone bipolar,BC9,Serpini1
+ON cone bipolar,BC9,Cpne9
+Rod,Rod,Rho
+Rod,Rod,Gnat1
+Rod,Rod,Nrl
+Rod,Rod,Cnga1
+Rod,Rod,Nr2e3
+Rod,Rod,Slc24a1
+Rod,Rod,Kcnj14
+Rod,Rod,Reep6
+Rod,Rod,Susd3
+Rod,Rod,Esrrb
+Rod,Rod,Gucy2f
+Rod,Rod,Pde6b
+Rod,Rod,Cngb1
+Rod,Rod,Gnb1
+Rod,Rod,Nrl
+Rod,Rod,Gnb1
+Rod,Rod,Aqp1
+Rod,Rod,Gnb1
+Rod,Rod,Glb1l2
+Rod,Rod,Esrrb
+Rod,Rod,Fscn2
+Rod,Rod,Gramd2
+Rod,Rod,Wisp1
+Rod,Rod,Pde6a
+Rod,Rod,Ppap2c
+Rod,Rod,Cdr2
+Rod,Rod,Rnf207
+Rod,Rod,Tnfaip3
+Rod,Rod,Fam160a1
+Rod,Rod,Guca1b
+Rod,Rod,Tnfaip3
+Rod,Rod,Plekha2
+Rod,Rod,Ebpl
+Rod,Rod,Pitpnm3
+Rod,Rod,Pitpnm3
+Rod,Rod,Gpsm2
+Rod,Rod,St3gal1
+Rod,Rod,Ppargc1b
+Rod,Rod,Tcp11
+Rod,Rod,Nt5e
+Rod,Rod,Plekhf2
+Rod,Rod,Sh2d1a
+Rod,Rod,Mef2c
+Rod,Rod,St8sia1
+Rod,Rod,Dhrs3
+Rod,Rod,Zfp36l2
+Rod,Rod,Zfyve28
+Rod,Rod,Frmpd1
+Rod,Rod,Chst3
+Rod,Rod,Zan
+Rod,Rod,Dhrs3
+Cone,Blue cone,Arr3
+Cone,Blue cone,Rcvrn
+Cone,Blue cone,Gnat2
+Cone,Blue cone,Gngt2
+Cone,Blue cone,Opn1sw
+Cone,Blue cone,Pde6h
+Cone,Blue cone,Guca1a
+Cone,Green cone,Arr3
+Cone,Green cone,Rcvrn
+Cone,Green cone,Gnat2
+Cone,Green cone,Gngt2
+Cone,Green cone,Opn1mw
+Cone,Green cone,Pde6h
+Cone,Green cone,Guca1a
+Cone,Red cone,Arr3
+Cone,Red cone,Rcvrn
+Cone,Red cone,Gnat2
+Cone,Red cone,Gngt2
+Cone,Red cone,Opn1lw
+Cone,Red cone,Pde6h
+Cone,Red cone,Guca1a
+Horizontal,Horizontal,Lhx1
+Horizontal,Horizontal,Onecut1
+Horizontal,Horizontal,Onecut2
+Horizontal,Horizontal,Calb1
+Retinal ganglion cell,Retinal ganglion cell,Rbpms
+Retinal ganglion cell,Retinal ganglion cell,Pou4f1
+Retinal ganglion cell,Retinal ganglion cell,Pou4f2
+Retinal ganglion cell,Retinal ganglion cell,Pou4f3
+Retinal ganglion cell,Retinal ganglion cell,Thy1
+Retinal ganglion cell,Retinal ganglion cell,Slc17a6
+Retinal ganglion cell,Retinal ganglion cell,Nefl
+Retinal ganglion cell,Retinal ganglion cell,Nefm
+Retinal ganglion cell,Retinal ganglion cell,Sncg
+Mueller cell,Mueller cell,Rlbp1
+Mueller cell,Mueller cell,Glul
+Mueller cell,Mueller cell,Apoe
+Mueller cell,Mueller cell,Crabp1
+Mueller cell,Mueller cell,Clu
+Mueller cell,Mueller cell,Slc1a3
+Mueller cell,Mueller cell,Dkk3
+Mueller cell,Mueller cell,Crym
+Pericyte,Pericyte,Rgc5
+Pericyte,Pericyte,Mgp
+Pericyte,Pericyte,Kcnj8
+Pericyte,Pericyte,Myl9
+Pericyte,Pericyte,Col4a1
+Microglia,Microglia,C1qa
+Microglia,Microglia,C1qb
+Microglia,Microglia,C1qc
+Microglia,Microglia,Hexb
+Microglia,Microglia,Ctss
+Microglia,Microglia,P2ry12
+Microglia,Microglia,Tmem119
+Microglia,Microglia,B2m
+Endothelial,Endothelial,Cldn5
+Endothelial,Endothelial,Igfbp7
+Endothelial,Endothelial,Col4a1
+Amacrine,GABAnergic amacrine,Slc32a1
+Amacrine,GABAnergic amacrine,Gad1
+Amacrine,GABAnergic amacrine,Gad2
+Amacrine,GABAnergic amacrine,Slc6a1
+Amacrine,GABAnergic amacrine,Slc6a11
+Amacrine,GABAnergic amacrine,Dner
+Amacrine,GABAnergic amacrine,Tfap2a
+Amacrine,GABAnergic amacrine,Tfap2b
+Amacrine,GABAnergic amacrine,C1ql1
+Amacrine,GABAnergic amacrine,C1ql2
+Amacrine,GABAnergic amacrine,Spock3
+Amacrine,Glycinergic amacrine,Slc32a1
+Amacrine,Glycinergic amacrine,Slc6a9
+Amacrine,Glycinergic amacrine,Glra2
+Amacrine,Glycinergic amacrine,Dab1
+Amacrine,Glycinergic amacrine,Tfap2c
+Amacrine,Glycinergic amacrine,Ebf3
+Amacrine,Glycinergic amacrine,Htra1
+Amacrine,Glycinergic amacrine,Dab1
+Amacrine,AII amacrine,Slc32a1
+Amacrine,AII amacrine,Slc6a9
+Amacrine,AII amacrine,Slc6a5
+Amacrine,AII amacrine,Dab1
+Amacrine,AII amacrine,Gjd2
+Amacrine,AII amacrine,Dner
+Amacrine,AII amacrine,Dab1
+Amacrine,AII amacrine,Tfap2a
+Amacrine,AII amacrine,Tfap2b
+Amacrine,AII amacrine,Spock3
+Amacrine,Starburst amacrine,Chat
+Amacrine,Starburst amacrine,Slc18a3
+Amacrine,Starburst amacrine,Slc5a7
+Amacrine,Starburst amacrine,Tfap2a
+Amacrine,Starburst amacrine,Tfap2b
+Amacrine,Starburst amacrine,Spock3

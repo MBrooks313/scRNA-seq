@@ -1,0 +1,42 @@
+﻿cell_type,sub_cell_type,gene
+Rod bipolar,Rod bipolar,Scgn
+Rod bipolar,Rod bipolar,App
+OFF cone biploar,BC1A,Prkca
+OFF cone biploar,BC1A,Grm6
+OFF cone biploar,BC1A,Isl1
+OFF cone biploar,BC1A,Syt2
+OFF cone biploar,BC1A,Rcvrn
+OFF cone biploar,BC1B,Prkca
+OFF cone biploar,BC1B,Grm6
+OFF cone biploar,BC1B,Isl1
+OFF cone biploar,BC1B,Syt2
+OFF cone biploar,BC1B,Rcvrn
+OFF cone biploar,BC2,Prkca
+OFF cone biploar,BC2,Grm6
+OFF cone biploar,BC2,Isl1
+OFF cone biploar,BC3A,Prkca
+OFF cone biploar,BC3A,Grm6
+OFF cone biploar,BC3A,Isl1
+OFF cone biploar,BC3B,Prkca
+OFF cone biploar,BC3B,Grm6
+OFF cone biploar,BC3B,Isl1
+OFF cone biploar,BC4,Prkca
+OFF cone biploar,BC4,Grm6
+OFF cone biploar,BC4,Rcvrn
+OFF cone biploar,BC4,Prkar2b
+OFF cone biploar,BC4,Hcn4
+ON cone biploar,BC5A,Prkca
+ON cone biploar,BC5B,Prkca
+ON cone biploar,BC5C,Prkca
+ON cone biploar,BC5D,Prkca
+ON cone biploar,BC5D,Grm6
+ON cone biploar,BC5D,Scgn
+ON cone biploar,BC6,Prkca
+ON cone biploar,BC7,Prkca
+ON cone biploar,BC7,Scgn
+ON cone biploar,BC8_9,Prkca
+ON cone biploar,BC8_9,Scgn
+Mueller glia,Mueller glia,Otx2
+Rod,Rod,Vsx2
+Cone,Blue cone,Vsx2
+Cone,Green cone,Vsx2
